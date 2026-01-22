@@ -1,290 +1,232 @@
-# Internship Project Template
+# Document Scanner and Organizer
 
-This template includes a FastAPI backend with Google Gemini LLM integration and a React frontend with Tailwind CSS.
+A web application that allows users to scan and upload documents (images or PDFs), automatically extract text content using vision-enabled LLM, categorize documents using AI, and make them searchable through a full-text search interface.
 
-## Project Structure
+---
 
-```
-.
-├── Backend/                    # FastAPI backend application
-│   ├── main.py                 # Main backend server file
-│   ├── pyproject.toml          # Python project configuration
-│   ├── requirements.txt        # Python dependencies
-│   ├── uv.lock                 # UV lock file for dependency versions
-│   ├── README.md               # Backend-specific documentation
-│   └── .env                    # Environment variables (create this file)
-│
-└── Frontend/                   # React frontend application
-    ├── public/
-    │   └── vite.svg            # Vite logo
-    ├── src/
-    │   ├── components/
-    │   │   └── QuoteGenerator.jsx  # Quote generator component
-    │   ├── assets/
-    │   │   └── react.svg       # React logo
-    │   ├── App.jsx             # Main app component (layout wrapper)
-    │   ├── App.css             # App-specific styles
-    │   ├── main.jsx            # React entry point
-    │   └── index.css           # Global styles with Tailwind
-    ├── eslint.config.js        # ESLint configuration
-    ├── index.html              # HTML entry point
-    ├── package.json            # Node.js dependencies and scripts
-    ├── package-lock.json       # npm lock file
-    ├── postcss.config.js       # PostCSS configuration
-    ├── tailwind.config.js      # Tailwind CSS configuration
-    ├── vite.config.js          # Vite build tool configuration
-    └── README.md               # Frontend-specific documentation
-```
+## Project Overview
+
+### Description
+
+The Document Scanner and Organizer transforms physical documents into organized, searchable digital files with automatic text extraction and AI-powered categorization. Users can quickly find any document by searching through extracted text content, eliminating the need for manual filing and organization systems.
+
+### Target Users
+
+- Professionals who need to digitize and organize paper documents
+- Students who want to scan and organize lecture notes and handouts
+- Small business owners managing invoices, receipts, and contracts
+- Anyone who needs to convert physical documents into searchable digital format
+
+### Core Value Proposition
+
+Transform physical documents into organized, searchable digital files with automatic text extraction and AI-powered categorization. Users can quickly find any document by searching through extracted text content.
+
+---
+
+## Technology Stack
+
+### Frontend
+- React 19
+- Vite (build tool)
+- Tailwind CSS (styling)
+- React Router DOM (routing)
+- Axios or Fetch (API calls)
+
+### Backend
+- Python 3.12+
+- FastAPI (REST API)
+- Uvicorn (ASGI server)
+- Pydantic (data validation)
+
+### Database
+- SQLite (for application data ONLY, NOT authentication)
+
+### Authentication
+- Firebase Authentication (email/password)
+- Firebase SDK in frontend
+
+### AI/ML
+- LangChain (basic chains for text extraction and categorization)
+- Google Gemini Vision LLM (for image understanding and text extraction)
+
+### Development Tools
+- UV (Python package manager)
+- npm (Node package manager)
+- Git (version control)
+
+---
+
+## Features
+
+- User authentication with Firebase
+- Upload document images (single or multi-page)
+- Scan multi-page documents (extract text from first 2 pages only for search)
+- Automatic text extraction using vision-enabled LLM
+- AI-based document categorization
+- Full-text search across all documents
+- View document details with extracted text
+- Organize documents by category
+- Filter documents by category on Dashboard
+- Delete documents
+- Document metadata storage (title, date, category)
+
+---
+
+## Architecture
+
+### Frontend Structure
+
+**Pages:**
+- Landing (`/`) - Welcome page with app info
+- Signup (`/signup`) - User registration
+- Login (`/login`) - User authentication
+- Dashboard (`/dashboard`) - Main user interface with document list and category filtering
+- Document Detail (`/documents/:id`) - View single document with extracted text
+- Profile (`/profile`) - User profile settings
+
+**Key Components:**
+- Navbar - Navigation header
+- DocumentList - Display documents grid/list
+- DocumentCard - Single document card
+- UploadModal - Upload interface
+- DocumentViewer - Display original document file
+- ExtractedTextView - Display extracted text
+- CategoryFilter - Filter documents by category
+- CategoryHeader - Shows selected category and count
+- CategorySelector - Change document category
+- SearchBar - Search interface
+
+### Backend Structure
+
+**API Endpoints:**
+- POST /api/documents - Upload new document (with LLM processing)
+- GET /api/documents - Get all user documents (optionally filter by category)
+- GET /api/documents/:id - Get single document with extracted text
+- GET /api/documents/file/:id - Serve original document file for viewing
+- DELETE /api/documents/:id - Delete document
+- GET /api/documents/categories - Get all categories with counts
+- GET /api/search - Search documents by text
+- PATCH /api/documents/:id/category - Update document category
+
+**Database:**
+- SQLite database for document metadata and extracted text
+- FTS (Full-Text Search) extension for efficient searching
+- Tables: documents, categories
+
+---
+
+## Issue Flow
+
+### Foundation (Issues 1-8)
+1. **Project Setup** - Initialize project structure and dependencies
+2. **Landing Page UI** - Create static landing page
+3. **Signup Page UI** - Create static signup form
+4. **Login Page UI** - Create static login form
+5. **Firebase Auth Setup** - Configure Firebase project and SDK
+6. **Integrate Signup with Firebase** - Connect signup form to Firebase
+7. **Integrate Login with Firebase** - Connect login form to Firebase
+8. **Dashboard UI** - Create protected dashboard page
+
+### Core Features (Issues 9-15)
+9. **Upload Document Feature** - Implement file upload (backend + frontend)
+10. **Process Document with Vision LLM** - Extract text using LangChain + Vision LLM
+11. **Display Documents** - Show user documents on dashboard
+12. **Document Detail View** - View single document with file viewer
+13. **Delete Document Feature** - Remove documents from system
+14. **AI Categorization** - Automatically categorize documents during processing
+15. **Category Management** - View categories and update document categories
+
+### Advanced Features (Issues 16-18)
+16. **Search Feature** - Full-text search through documents
+17. **Category Filtering on Dashboard** - Filter documents by category
+18. **First 2 Pages Text Extraction** - Optimize multi-page PDF processing
+
+### Final (Issue 19)
+19. **Final Testing** - Complete flow verification and documentation
+
+---
+
+## Key Implementation Details
+
+### Document Processing
+
+**Single-Page Documents:**
+- Process entire document with vision LLM
+- Extract all text content
+- Store in database
+
+**Multi-Page Documents:**
+- Extract first 2 pages only
+- Process each page separately with vision LLM
+- Combine text from both pages
+- Store combined text in database
+- Original full PDF is still stored for viewing
+
+### Text Extraction
+
+- Uses LangChain with Google Gemini Vision LLM
+- NO OCR libraries (PyTesseract, etc.)
+- Extracted text stored in SQLite database
+- Full-text search using SQLite FTS extension
+
+### Categorization
+
+- AI analyzes extracted text during processing
+- LangChain chains determine appropriate category
+- Categories: Invoices, Receipts, Contracts, Notes, Letters, Forms, etc.
+- Category stored with document metadata
+
+### Search
+
+- SQLite FTS extension for full-text search
+- Searches through extracted text content
+- Returns documents with matching snippets
+- Supports partial word matching and multiple word queries
+
+---
+
+## Development Guidelines
+
+### Important Reminders
+
+- **NO OCR libraries** - Use vision-enabled LLM only (Gemini Vision)
+- **NO PostgreSQL** - Use SQLite for all data storage
+- **NO JWT/OAuth** - Use Firebase Authentication only
+- Process documents asynchronously to avoid blocking
+- Provide clear feedback during document processing
+- Handle errors gracefully (invalid images, processing failures)
+
+### Developer Flexibility
+
+- Component names can be changed
+- Additional components can be added
+- Endpoint paths can be modified
+- Database schema can be improved
+- Categories can be customized
+- The goal is a working, well-designed application
+
+---
 
 ## Getting Started
 
-### Clone the Repository
-
-First, you need to clone this repository to your local machine. This will download all the project files to your computer.
-
-**Repository URL:** https://github.com/progressionschool/internship-project-template
-
-**On Windows:**
-
-1. Open **Git Bash** (if you have Git installed) or **Command Prompt**
-2. Navigate to the directory where you want to save the project:
-   ```bash
-   cd C:\Users\YourName\Desktop
-   ```
-   (Replace `YourName` with your actual username)
-3. Clone the repository:
-   ```bash
-   git clone https://github.com/progressionschool/internship-project-template.git
-   ```
-4. Navigate into the project directory:
-   ```bash
-   cd internship-project-template
-   ```
-
-**On macOS:**
-
-1. Open **Terminal** (you can find it in Applications > Utilities)
-2. Navigate to the directory where you want to save the project:
-   ```bash
-   cd ~/Desktop
-   ```
-   (Or any other directory you prefer)
-3. Clone the repository:
-   ```bash
-   git clone https://github.com/progressionschool/internship-project-template.git
-   ```
-4. Navigate into the project directory:
-   ```bash
-   cd internship-project-template
-   ```
-
-**Note:** Make sure you have Git installed on your system. If you don't have Git installed, download it from [git-scm.com](https://git-scm.com/downloads).
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Python 3.12+** - [Download Python](https://www.python.org/downloads/)
-- **UV Package Manager** - Fast Python package installer (see installation below)
-- **Node.js 18+** - [Download Node.js](https://nodejs.org/)
-- **npm** (comes with Node.js) or **yarn**
-- **Google API Key** - Get one from [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-## Backend Setup
-
-### 1. Install UV Package Manager
-
-Install UV using pip:
-
-```bash
-pip install uv
-```
-
-For alternative installation methods, see the [UV documentation](https://github.com/astral-sh/uv).
-
-### 2. Navigate to Backend Directory
-
-```bash
-cd Backend
-```
-
-### 3. Create Virtual Environment
-
-Create a virtual environment using UV:
-
-```bash
-uv venv
-```
-
-This will create a `.venv` folder in the Backend directory.
-
-### 4. Activate Virtual Environment
-
-Activate the virtual environment:
-
-**On Windows:**
-```bash
-.venv\Scripts\activate
-```
-
-**On macOS/Linux:**
-```bash
-source .venv/bin/activate
-```
-
-### 5. Install Dependencies
-
-Install all packages from `requirements.txt`:
-
-```bash
-uv add -r requirements.txt
-```
-
-### 6. Create Environment File
-
-Create a `.env` file in the `Backend` directory:
-
-```bash
-# On macOS/Linux
-touch .env
-
-# On Windows
-type nul > .env
-```
-
-Add your Google API key to the `.env` file:
-
-```
-GOOGLE_API_KEY=your_api_key_here
-```
-
-Replace `your_api_key_here` with your actual Google API key from [Google AI Studio](https://makersuite.google.com/app/apikey).
-
-### 7. Run the Backend Server
-
-```bash
-uvicorn main:app --reload
-```
-
-The backend server will start at: **http://localhost:8000**
-
-- API Documentation: http://localhost:8000/docs
-- Health Check: http://localhost:8000/health
-- Random Quote Endpoint: http://localhost:8000/api/random-quote
-
-## Frontend Setup
-
-### 1. Navigate to Frontend Directory
-
-Open a new terminal window and navigate to the Frontend directory:
-
-```bash
-cd Frontend
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Run the Frontend Development Server
-
-```bash
-npm run dev
-```
-
-The frontend will start at: **http://localhost:5173** (or another port if 5173 is busy)
-
-## Testing the Connection
-
-1. Make sure both servers are running:
-
-   - Backend: http://localhost:8000
-   - Frontend: http://localhost:5173
-
-2. Open your browser and go to: http://localhost:5173
-
-3. Click the "Generate Quote" button
-
-4. You should see a random inspirational quote generated by the AI!
-
-## Available Endpoints
-
-### Backend Endpoints
-
-- `GET /` - Welcome message
-- `GET /health` - Health check endpoint
-- `GET /api/random-quote` - Sample endpoint to connect Frontend and Backend (generates random quote using Gemini LLM)
-
-## Development Commands
-
-### Backend
-
-```bash
-# Run development server with auto-reload
-uvicorn main:app --reload
-
-# Run on specific port
-uvicorn main:app --reload --port 8001
-```
-
-### Frontend
-
-```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Run linter
-npm run lint
-```
-
-## Technologies Used
-
-### Backend
-
-- **FastAPI** - Modern Python web framework
-- **Uvicorn** - ASGI server
-- **Google Generative AI** - Gemini LLM integration
-- **python-dotenv** - Environment variable management
-
-### Frontend
-
-- **React 19** - UI library
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Utility-first CSS framework
-- **ESLint** - Code linting
-
-## Next Steps
-
-Once everything is running fine, here are some steps to extend this template:
-
-1. **Create your own backend endpoints**
-
-   - Add new API endpoints in `Backend/main.py`
-   - Use FastAPI decorators like `@app.get()`, `@app.post()`, `@app.put()`, `@app.delete()`
-   - Test your endpoints using the Swagger UI at http://localhost:8000/docs
-
-2. **Integrate new endpoints to the frontend**
-
-   - Create new components in `Frontend/src/components/` folder
-   - Update `Frontend/src/App.jsx` to include your new components
-   - Use `fetch()` or libraries like `axios` to make API calls
-   - Handle loading states and errors appropriately
-   - Update the UI to display the data from your new endpoints
+1. Complete Issue #01 (Project Setup) to initialize the project
+2. Follow issues sequentially from #02 onwards
+3. Each issue builds upon previous work
+4. Refer to individual issue files for detailed implementation guidance
+
+---
 
 ## Resources
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [React Documentation](https://react.dev/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Google Generative AI Documentation](https://ai.google.dev/docs)
+- [Firebase Authentication Documentation](https://firebase.google.com/docs/auth)
+- [LangChain Documentation](https://python.langchain.com/docs/get_started/introduction)
+- [Google Gemini Vision API](https://ai.google.dev/docs)
+- [SQLite FTS Documentation](https://www.sqlite.org/fts5.html)
+
+---
 
 ## License
 
