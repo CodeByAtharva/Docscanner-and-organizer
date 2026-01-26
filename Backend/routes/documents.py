@@ -79,3 +79,55 @@ async def upload_document(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/documents")
+async def get_documents(user_id: str):
+    """
+    Retrieve all documents for a specific user.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status 
+            FROM documents 
+            WHERE user_id = ? 
+            ORDER BY upload_date DESC
+        ''', (user_id,))
+        
+        documents = []
+        rows = cursor.fetchall()
+        
+        for row in rows:
+            # Create a preview of the text (first 150 chars)
+            preview_text = ""
+            if row['extracted_text']:
+                preview_text = row['extracted_text'][:150] + "..." if len(row['extracted_text']) > 150 else row['extracted_text']
+            elif row['processing_status'] == 'processing':
+                preview_text = "Processing document..."
+            elif row['processing_status'] == 'failed':
+                preview_text = "Processing failed."
+            else:
+                preview_text = "No text extracted."
+
+            documents.append({
+                "id": row['id'],
+                "title": row['title'],
+                "category": "Uncategorized", # Default for now
+                "date": row['upload_date'], # You might want to format this
+                "preview": preview_text,
+                "status": row['processing_status'],
+                "file_path": row['file_path'] # Optional, depending on if frontend needs it direct
+            })
+            
+        conn.close()
+        
+        return {
+            "success": True,
+            "count": len(documents),
+            "documents": documents
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
