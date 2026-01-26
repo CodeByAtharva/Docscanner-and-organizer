@@ -131,3 +131,80 @@ async def get_documents(user_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/documents/{document_id}")
+async def get_document_details(document_id: int, user_id: str):
+    """
+    Retrieve details for a single document.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status, file_size
+            FROM documents 
+            WHERE id = ? AND user_id = ?
+        ''', (document_id, user_id))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Document not found")
+            
+        return {
+            "success": True,
+            "document": {
+                "id": row['id'],
+                "title": row['title'],
+                "category": "Uncategorized", # Default
+                "date": row['upload_date'],
+                "content_type": row['content_type'],
+                "file_size": row['file_size'],
+                "status": row['processing_status'],
+                "extracted_text": row['extracted_text'],
+                "file_path": row['file_path']
+            }
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi.responses import FileResponse
+
+@router.get("/api/documents/file/{document_id}")
+async def get_document_file(document_id: int, user_id: str):
+    """
+    Serve the original file for a document.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT file_path, content_type FROM documents WHERE id = ? AND user_id = ?', (document_id, user_id))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Document not found")
+            
+        file_path = row['file_path']
+        content_type = row['content_type']
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found on server")
+            
+        return FileResponse(
+            file_path, 
+            media_type=content_type, 
+            filename=os.path.basename(file_path),
+            content_disposition_type='inline'
+        )
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

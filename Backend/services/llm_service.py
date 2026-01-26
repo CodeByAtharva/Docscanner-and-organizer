@@ -7,8 +7,8 @@ from database import get_db_connection
 import base64
 
 # Initialize the Vision Model
-# Using gemini-flash-latest which matches models/gemini-flash-latest
-llm = ChatGoogleGenerativeAI(model="gemini-flash-latest")
+# Using gemini-1.5-flash for cost efficiency
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-lite")
 
 async def process_document(document_id: int, file_path: str):
     """

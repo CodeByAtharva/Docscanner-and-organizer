@@ -3,6 +3,7 @@ import Landing from './pages/Landing';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import DocumentDetail from './pages/DocumentDetail';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -17,6 +18,14 @@ function App() {
           element={
             <RequireAuth>
               <Dashboard />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/documents/:id"
+          element={
+            <RequireAuth>
+              <DocumentDetail />
             </RequireAuth>
           }
         />

@@ -1,9 +1,30 @@
-const DocumentCard = ({ title, category, date, preview, status }) => {
+import { useNavigate } from 'react-router-dom';
+
+const DocumentCard = ({ id, title, category, date, preview, status }) => {
+    const navigate = useNavigate();
+
     // Format date if needed, assuming ISO string from backend
     const formattedDate = new Date(date).toLocaleDateString();
 
+    // Simple navigation via window for now or better useLink if wrapped
+    // But since this is a component usage in a list, we can use useNavigate hook or Link wrapper.
+    // Let's assume we can use useNavigate.
+    // Wait, I need to Import `useNavigate`.
+    // Since I can't easily add import at top with ReplaceFileContent unless I see the top,
+    // I will just use window.location or assume this replacement block is strictly inside component.
+    // Actually, best to use Link from react-router-dom or properties passed down.
+    // Let's modify the component to use `Link` wrapper or `onClick`.
+
+
+    // Wait, let's look at the previous `view_file`. I have the full content.
+    // I'll rely on the next tool call to fix imports.
+    // Here I will just add the onClick handler and visual cue.
+
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 dark:border-gray-700 overflow-hidden group cursor-pointer flex flex-col h-full">
+        <div
+            onClick={() => navigate(`/documents/${id}`)}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100 dark:border-gray-700 overflow-hidden group cursor-pointer flex flex-col h-full"
+        >
             <div className={`h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center relative overflow-hidden p-4`}>
                 {/* Preview Text or Icon */}
                 {preview ? (
