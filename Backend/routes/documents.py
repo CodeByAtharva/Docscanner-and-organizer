@@ -1,11 +1,12 @@
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Form
+from fastapi import APIRouter, File, UploadFile, HTTPException, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
 import shutil
 import os
 import uuid
 from datetime import datetime
 from database import get_db_connection
+from services.llm_service import process_document
 
 router = APIRouter()
 
@@ -15,6 +16,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 @router.post("/api/documents")
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user_id: str = Form(...)  # Get user_id from form data
 ):
@@ -59,6 +61,9 @@ async def upload_document(
         document_id = cursor.lastrowid
         conn.commit()
         conn.close()
+
+        # 6. Trigger Background Processing
+        background_tasks.add_task(process_document, document_id, file_path)
 
         return JSONResponse(
             status_code=201,

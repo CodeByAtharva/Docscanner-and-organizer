@@ -3,3 +3,6 @@ uvicorn
 google-generativeai
 python-dotenv
 python-multipart
+langchain
+langchain-google-genai
+pymupdf
