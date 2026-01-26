@@ -197,7 +197,12 @@ async def get_document_file(document_id: int, user_id: str):
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="File not found on server")
             
-        return FileResponse(file_path, media_type=content_type, filename=os.path.basename(file_path))
+        return FileResponse(
+            file_path, 
+            media_type=content_type, 
+            filename=os.path.basename(file_path),
+            content_disposition_type='inline'
+        )
 
     except HTTPException as he:
         raise he

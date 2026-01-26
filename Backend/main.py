@@ -97,7 +97,7 @@ async def get_random_quote():
     
     try:
         # Make a simple LLM call to generate a random quote
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash-lite')
         response = model.generate_content("Tell me a random inspirational quote")
         
         return {

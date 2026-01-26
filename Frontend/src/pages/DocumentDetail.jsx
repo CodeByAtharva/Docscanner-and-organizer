@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import DocumentViewer from '../components/DocumentViewer';
 import ExtractedTextView from '../components/ExtractedTextView';
 import CategorySelector from '../components/CategorySelector';
 
@@ -100,17 +99,8 @@ const DocumentDetail = () => {
                 </div>
 
                 {/* Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-                    {/* Left Column: File Viewer */}
-                    <div className="flex flex-col h-full">
-                        <DocumentViewer
-                            fileUrl={fileUrl}
-                            type={document.content_type}
-                            title={document.title}
-                        />
-                    </div>
-
-                    {/* Right Column: Extracted Text */}
+                <div className="h-full">
+                    {/* Full Width: Extracted Text */}
                     <div className="flex flex-col h-full">
                         <ExtractedTextView
                             text={document.extracted_text}
