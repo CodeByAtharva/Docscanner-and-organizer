@@ -5,10 +5,18 @@ import DocumentList from '../components/DocumentList';
 import UploadButton from '../components/UploadButton';
 import SearchBar from '../components/SearchBar';
 import CategoryFilter from '../components/CategoryFilter';
+import UploadModal from '../components/UploadModal';
 
 const Dashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Categories');
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+    const handleUploadSuccess = () => {
+        // Refresh document list here if needed (e.g. valid refetch or context)
+        // For now just console log, user will see success in modal.
+        console.log("Upload successful, refreshing list...");
+    };
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -21,7 +29,7 @@ const Dashboard = () => {
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Documents</h1>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage and organize your scanned files</p>
                     </div>
-                    <UploadButton />
+                    <UploadButton onClick={() => setIsUploadModalOpen(true)} />
                 </div>
 
                 {/* Controls Section */}
@@ -37,6 +45,12 @@ const Dashboard = () => {
                 {/* Content Section */}
                 <DocumentList searchQuery={searchQuery} selectedCategory={selectedCategory} />
             </main>
+
+            <UploadModal
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                onUploadSuccess={handleUploadSuccess}
+            />
 
             <Footer />
         </div>
