@@ -38,11 +38,28 @@ else:
     genai.configure(api_key=api_key)
     genai_configured = True
 
-app = FastAPI(title="Backend API", version="0.1.0")
+
+    
+from contextlib import asynccontextmanager
+
+# ... existing imports ...
+from database import init_db
+from routes import documents
+
+# Define lifespan context manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Init DB and create uploads dir
+    init_db()
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
+    yield
+    # Shutdown: Clean up resources if needed (none for now)
+
+app = FastAPI(title="Backend API", version="0.1.0", lifespan=lifespan)
 
 # Enable CORS (Cross-Origin Resource Sharing) to allow frontend to connect
-# This is necessary because the frontend runs on a different port than the backend
-# Without CORS, browsers will block requests from frontend to backend
+# ... existing cors middleware ...
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vite default port and common React port
@@ -50,6 +67,9 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
 )
+
+# Include Routers
+app.include_router(documents.router)
 
 @app.get("/")
 async def root():
