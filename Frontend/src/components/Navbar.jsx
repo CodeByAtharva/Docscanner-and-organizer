@@ -1,17 +1,38 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { auth } from '../firebase/config';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [user, setUser] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            unsubscribe();
+        };
     }, []);
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate('/login');
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
+    };
 
     return (
         <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
@@ -27,12 +48,32 @@ const Navbar = () => {
                             <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors">
                                 Home
                             </Link>
-                            <Link to="/login" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors">
-                                Login
-                            </Link>
-                            <Link to="/signup" className="text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                                Sign Up
-                            </Link>
+                            {user ? (
+                                <>
+                                    <Link to="/dashboard" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors">
+                                        Dashboard
+                                    </Link>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400 px-3 py-2">
+                                        {user.email}
+                                    </span>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                                    >
+                                        Log Out
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/login" className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors">
+                                        Login
+                                    </Link>
+                                    <Link to="/signup" className="text-white bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                                    >
+                                        Sign Up
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                     <div className="-mr-2 flex md:hidden">
@@ -62,12 +103,31 @@ const Navbar = () => {
                         <Link to="/" className="text-gray-900 dark:text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
                             Home
                         </Link>
-                        <Link to="/login" className="text-gray-900 dark:text-gray-300 block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
-                            Login
-                        </Link>
-                        <Link to="/signup" className="text-indigo-600 block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
-                            Sign Up
-                        </Link>
+                        {user ? (
+                            <>
+                                <Link to="/dashboard" className="text-gray-900 dark:text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+                                    Dashboard
+                                </Link>
+                                <span className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-400">
+                                    {user.email}
+                                </span>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full text-left text-indigo-600 block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
+                                >
+                                    Log Out
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/login" className="text-gray-900 dark:text-gray-300 block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+                                    Login
+                                </Link>
+                                <Link to="/signup" className="text-indigo-600 block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-100 dark:hover:bg-gray-800">
+                                    Sign Up
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
