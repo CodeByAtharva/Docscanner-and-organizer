@@ -20,7 +20,7 @@ function QuoteGenerator() {
 
       const data = await response.json();
       setQuote(data.data.quote);
-    } catch (err) {
+    } catch {
       setError(
         "Error fetching quote. Make sure the backend server is running."
       );
