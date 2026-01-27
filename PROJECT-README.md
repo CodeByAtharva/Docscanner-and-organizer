@@ -10,6 +10,8 @@ The **Document Scanner and Organizer** is a full-stack web application designed 
 - **Full-Text Search**: Instantly search through document content using a powerful FTS5 engine.
 - **Category Filtering**: Filter documents by category with real-time updates.
 - **Secure Authentication**: User signup and login powered by Firebase Authentication.
+- **User Isolation**: Data privacy is ensuring users can only view and manage their own documents.
+- **Optimized Onboarding**: Seamless signup process with auto-redirection to the dashboard.
 
 ---
 
