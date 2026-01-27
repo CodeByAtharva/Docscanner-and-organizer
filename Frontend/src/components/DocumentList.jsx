@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DocumentCard from './DocumentCard';
 
-const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', refreshTrigger = 0 }) => {
+const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', refreshTrigger = 0, onDocumentsLoaded }) => {
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
