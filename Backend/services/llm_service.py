@@ -8,7 +8,25 @@ import base64
 
 # Initialize the Vision Model
 # Using gemini-1.5-flash for cost efficiency
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-lite")
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
+
+import asyncio
+from google.api_core.exceptions import ResourceExhausted
+
+async def invoke_with_retry(llm, messages, max_retries=3, initial_delay=10):
+    for attempt in range(max_retries):
+        try:
+            return await llm.ainvoke(messages)
+        except ResourceExhausted as e:
+            print(f"Quota exceeded (attempt {attempt + 1}/{max_retries})...")
+            if attempt == max_retries - 1:
+                raise e
+            # Wait with exponential backoff (retry after 60s as suggested by API usually, but starting smaller + checked error msg says ~60s)
+            # The error message said "Please retry in 59.23s", so let's be safe with 65s for 429s specifically if we interpret that.
+            # But generic backoff: 30, 60, 120
+            delay = 60 * (attempt + 1) 
+            print(f"Retrying in {delay} seconds...")
+            await asyncio.sleep(delay)
 
 async def process_document(document_id: int, file_path: str):
     """
@@ -62,27 +80,62 @@ async def process_document(document_id: int, file_path: str):
         if not image_contents:
             raise ValueError("No content could be extracted from the file.")
 
-        # 2. Call LLM
-        prompt_text = "Extract all the text content from this document. If it is a multi-page document, I have provided the first few pages. Output only the extracted text, preserving the structure as much as possible."
+        # 2a. Call LLM for Text Extraction
+        extraction_prompt = "Extract all the text content from this document. If it is a multi-page document, I have provided the first few pages. Output only the extracted text, preserving the structure as much as possible."
         
         message = HumanMessage(
             content=[
-                {"type": "text", "text": prompt_text},
+                {"type": "text", "text": extraction_prompt},
                 *image_contents
             ]
         )
         
-        response = llm.invoke([message])
+        response = await invoke_with_retry(llm, [message])
         extracted_text = response.content
         if not isinstance(extracted_text, str):
             print(f"Warning: extracted_text is not a string, type: {type(extracted_text)}")
             extracted_text = str(extracted_text)
 
         print(f"Extracted text type: {type(extracted_text)}")
+        
+        # 2b. Call LLM for Categorization
+        print("Starting categorization...")
+        category_prompt = f"""
+        Analyze the following text extracted from a document and categorize it into exactly one of the following categories:
+        - Invoice
+        - Receipt
+        - Contract
+        - Note
+        - Letter
+        - Form
+        - Other
+
+        Text to analyze:
+        {extracted_text[:2000]}  # Analyze first 2000 chars
+
+        Return ONLY the category name. Do not include any explanation.
+        """
+        
+        category_message = HumanMessage(content=category_prompt)
+        category_response = await invoke_with_retry(llm, [category_message])
+        category = category_response.content.strip()
+        
+        # Validate category
+        valid_categories = ["Invoice", "Receipt", "Contract", "Note", "Letter", "Form", "Other"]
+        # Basic cleanup if LLM returns "Category: Invoice" or similar
+        for valid_cat in valid_categories:
+            if valid_cat.lower() in category.lower():
+                category = valid_cat
+                break
+        else:
+            category = "Uncategorized"
+            
+        print(f"Document categorized as: {category}")
+
         # 3. Save Result
         cursor.execute(
-            "UPDATE documents SET processing_status = ?, extracted_text = ? WHERE id = ?", 
-            ('completed', extracted_text, document_id)
+            "UPDATE documents SET processing_status = ?, extracted_text = ?, category = ? WHERE id = ?", 
+            ('completed', extracted_text, category, document_id)
         )
         conn.commit()
         print(f"Document {document_id} processed successfully.")

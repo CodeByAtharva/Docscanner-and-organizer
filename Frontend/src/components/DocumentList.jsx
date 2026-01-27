@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import DocumentCard from './DocumentCard';
 
-const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories' }) => {
+const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', refreshTrigger = 0 }) => {
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const fetchDocuments = async () => {
+    const fetchDocuments = async (isBackground = false) => {
         try {
-            setLoading(true);
+            if (!isBackground) setLoading(true);
             // Using a dummy user_id or one from context if available in future
             const userId = localStorage.getItem('user_id') || 'test_user_id';
             const response = await fetch(`http://localhost:8000/api/documents?user_id=${userId}`);
@@ -23,16 +23,30 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories' })
         } catch (err) {
             setError(err.message);
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchDocuments();
+    }, [refreshTrigger]);
 
-        // Setup polling or refresh mechanism could go here
-        // For now, simpler refresh on mount
-    }, []);
+    // Polling logic: Check every 5 seconds if any document is processing
+    useEffect(() => {
+        const hasProcessing = documents.some(doc => doc.status === 'processing');
+        let intervalId;
+
+        if (hasProcessing) {
+            intervalId = setInterval(() => {
+                console.log("Polling for updates...");
+                fetchDocuments(true);
+            }, 5000);
+        }
+
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [documents]);
 
     // Filter documents based on query and category (Frontend filtering for now as per requirements)
     const filteredDocuments = documents.filter((doc) => {

@@ -90,7 +90,7 @@ async def get_documents(user_id: str):
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status 
+            SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status, category 
             FROM documents 
             WHERE user_id = ? 
             ORDER BY upload_date DESC
@@ -114,7 +114,7 @@ async def get_documents(user_id: str):
             documents.append({
                 "id": row['id'],
                 "title": row['title'],
-                "category": "Uncategorized", # Default for now
+                "category": row['category'] if row['category'] else "Uncategorized", 
                 "date": row['upload_date'], # You might want to format this
                 "preview": preview_text,
                 "status": row['processing_status'],
@@ -142,7 +142,7 @@ async def get_document_details(document_id: int, user_id: str):
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status, file_size
+            SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status, file_size, category
             FROM documents 
             WHERE id = ? AND user_id = ?
         ''', (document_id, user_id))
@@ -158,7 +158,7 @@ async def get_document_details(document_id: int, user_id: str):
             "document": {
                 "id": row['id'],
                 "title": row['title'],
-                "category": "Uncategorized", # Default
+                "category": row['category'] if row['category'] else "Uncategorized",
                 "date": row['upload_date'],
                 "content_type": row['content_type'],
                 "file_size": row['file_size'],

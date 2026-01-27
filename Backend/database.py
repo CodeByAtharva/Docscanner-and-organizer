@@ -26,7 +26,8 @@ def init_db():
                 file_size INTEGER,
                 extracted_text TEXT,
                 processing_status TEXT DEFAULT 'pending',
-                error_message TEXT
+                error_message TEXT,
+                category TEXT DEFAULT 'Uncategorized'
             )
         ''')
         
@@ -46,6 +47,10 @@ def init_db():
         if 'error_message' not in columns:
             print("Migrating database: adding error_message column")
             conn.execute("ALTER TABLE documents ADD COLUMN error_message TEXT")
+            
+        if 'category' not in columns:
+            print("Migrating database: adding category column")
+            conn.execute("ALTER TABLE documents ADD COLUMN category TEXT DEFAULT 'Uncategorized'")
             
         conn.commit()
         print(f"Database {DB_NAME} initialized successfully.")

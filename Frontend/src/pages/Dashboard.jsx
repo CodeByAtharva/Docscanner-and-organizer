@@ -11,10 +11,10 @@ const Dashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Categories');
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const handleUploadSuccess = () => {
-        // Refresh document list here if needed (e.g. valid refetch or context)
-        // For now just console log, user will see success in modal.
+        setRefreshTrigger(prev => prev + 1);
         console.log("Upload successful, refreshing list...");
     };
 
@@ -43,7 +43,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Content Section */}
-                <DocumentList searchQuery={searchQuery} selectedCategory={selectedCategory} />
+                <DocumentList searchQuery={searchQuery} selectedCategory={selectedCategory} refreshTrigger={refreshTrigger} />
             </main>
 
             <UploadModal
