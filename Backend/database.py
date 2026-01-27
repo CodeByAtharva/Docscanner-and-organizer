@@ -52,6 +52,55 @@ def init_db():
             print("Migrating database: adding category column")
             conn.execute("ALTER TABLE documents ADD COLUMN category TEXT DEFAULT 'Uncategorized'")
             
+        # --- Full Text Search Setup ---
+        # Create FTS virtual table
+        conn.execute('''
+            CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(
+                title,
+                extracted_text,
+                category,
+                content='documents',
+                content_rowid='id'
+            )
+        ''')
+
+        # Triggers to keep FTS table in sync
+        # INSERT Trigger
+        conn.execute('''
+            CREATE TRIGGER IF NOT EXISTS documents_ai AFTER INSERT ON documents BEGIN
+                INSERT INTO documents_fts(rowid, title, extracted_text, category) 
+                VALUES (new.id, new.title, new.extracted_text, new.category);
+            END;
+        ''')
+
+        # DELETE Trigger
+        conn.execute('''
+            CREATE TRIGGER IF NOT EXISTS documents_ad AFTER DELETE ON documents BEGIN
+                INSERT INTO documents_fts(documents_fts, rowid, title, extracted_text, category) 
+                VALUES('delete', old.id, old.title, old.extracted_text, old.category);
+            END;
+        ''')
+
+        # UPDATE Trigger
+        conn.execute('''
+            CREATE TRIGGER IF NOT EXISTS documents_au AFTER UPDATE ON documents BEGIN
+                INSERT INTO documents_fts(documents_fts, rowid, title, extracted_text, category) 
+                VALUES('delete', old.id, old.title, old.extracted_text, old.category);
+                INSERT INTO documents_fts(rowid, title, extracted_text, category) 
+                VALUES (new.id, new.title, new.extracted_text, new.category);
+            END;
+        ''')
+
+        # Populate FTS if empty (Migration)
+        cursor.execute("SELECT count(*) as count FROM documents_fts")
+        fts_count = cursor.fetchone()['count']
+        if fts_count == 0:
+            cursor.execute("SELECT count(*) as count FROM documents")
+            doc_count = cursor.fetchone()['count']
+            if doc_count > 0:
+                 print("Migrating database: Populating FTS index...")
+                 conn.execute("INSERT INTO documents_fts(rowid, title, extracted_text, category) SELECT id, title, extracted_text, category FROM documents")
+
         conn.commit()
         print(f"Database {DB_NAME} initialized successfully.")
     except Exception as e:

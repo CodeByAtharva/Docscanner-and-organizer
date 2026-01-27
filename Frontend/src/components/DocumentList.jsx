@@ -9,16 +9,33 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
     const fetchDocuments = async (isBackground = false) => {
         try {
             if (!isBackground) setLoading(true);
-            // Using a dummy user_id or one from context if available in future
             const userId = localStorage.getItem('user_id') || 'test_user_id';
-            const response = await fetch(`http://localhost:8000/api/documents?user_id=${userId}`);
+
+            let url = `http://localhost:8000/api/documents?user_id=${userId}`;
+            if (searchQuery) {
+                url = `http://localhost:8000/api/search?q=${encodeURIComponent(searchQuery)}&user_id=${userId}`;
+            }
+
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');
             }
 
             const data = await response.json();
-            setDocuments(data.documents);
+
+            if (searchQuery) {
+                // Map search results to document format
+                // Search results have 'snippet' which we use as 'preview'
+                const searchResults = data.results.map(result => ({
+                    ...result,
+                    preview: result.snippet // Use snippet for preview
+                }));
+                setDocuments(searchResults);
+            } else {
+                setDocuments(data.documents);
+            }
+
             setError(null);
         } catch (err) {
             setError(err.message);
@@ -28,11 +45,18 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
     };
 
     useEffect(() => {
-        fetchDocuments();
-    }, [refreshTrigger]);
+        // Debounce search
+        const timerId = setTimeout(() => {
+            fetchDocuments();
+        }, 300);
 
-    // Polling logic: Check every 5 seconds if any document is processing
+        return () => clearTimeout(timerId);
+    }, [searchQuery, refreshTrigger]);
+
+    // Polling logic: Check every 5 seconds if any document is processing, ONLY if not searching
     useEffect(() => {
+        if (searchQuery) return; // Don't poll while searching to avoid overwriting results
+
         const hasProcessing = documents.some(doc => doc.status === 'processing');
         let intervalId;
 
@@ -46,13 +70,13 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
         return () => {
             if (intervalId) clearInterval(intervalId);
         };
-    }, [documents]);
+    }, [documents, searchQuery]);
 
-    // Filter documents based on query and category (Frontend filtering for now as per requirements)
+    // Filter documents based on category (Search is handled by API now)
     const filteredDocuments = documents.filter((doc) => {
-        const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
+        // const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()); // Handled by API
         const matchesCategory = selectedCategory === 'All Categories' || doc.category === selectedCategory;
-        return matchesSearch && matchesCategory;
+        return matchesCategory;
     });
 
     if (loading) {

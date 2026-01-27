@@ -225,6 +225,7 @@ async def get_document_file(document_id: int, user_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 # Helper Functions for Category Management
 def _get_categories_with_counts(user_id: str):
     """
@@ -298,6 +299,87 @@ def _update_document_category(document_id: int, user_id: str, new_category: str)
         return False, str(e)
     finally:
         conn.close()
+
+def _search_documents(user_id: str, query: str):
+    """
+    Helper function to perform full-text search on documents.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # FTS5 Query
+        # We join back to the main documents table to get all metadata
+        # We use snippet() to highlight matches in extracted_text
+        # snippet(documents_fts, column_index, start_marker, end_marker, trailing_text, max_tokens)
+        
+        # IMPORTANT: FTS queries can be complex. We need to sanitize safely or use parameters.
+        # SQLite FTS parameters work for the match phrase.
+        
+        # For simplicity in this learning step, we use the standard match operator.
+        # Ideally, we should sanitize `query` to prevent malformed FTS syntax errors.
+        # A simple way is to wrap it in quotes if it doesn't have them, or just pass it as param.
+        
+        # Search against title, category, and extracted_text
+        # We'll construct a query that matches any.
+        
+        # Note: FTS5 requires matching the virtual table. 
+        # Rowid joins virtual table to main table.
+        
+        sql = '''
+            SELECT 
+                d.id, d.title, d.category, d.upload_date, d.processing_status,
+                snippet(documents_fts, 1, '<b>', '</b>', '...', 15) as snippet
+            FROM documents d
+            JOIN documents_fts fts ON d.id = fts.rowid
+            WHERE documents_fts MATCH ? AND d.user_id = ?
+            ORDER BY rank
+        '''
+        
+        # We'll use prefix search for better UX (append *)
+        # Wrap query in quotes to handle special characters (like hyphens) and treat as phrase
+        search_term = f'"{query}"*'
+        
+        cursor.execute(sql, (search_term, user_id))
+        rows = cursor.fetchall()
+        
+        results = []
+        for row in rows:
+            results.append({
+                "id": row['id'],
+                "title": row['title'],
+                "category": row['category'],
+                "date": row['upload_date'],
+                "status": row['processing_status'],
+                "snippet": row['snippet']
+            })
+            
+        return results
+        
+    except Exception as e:
+        print(f"Search error: {e}")
+        return []
+    finally:
+        conn.close()
+
+@router.get("/api/search")
+async def search_documents(q: str, user_id: str):
+    """
+    Search documents using Full Text Search.
+    """
+    if not q:
+        return {"success": True, "count": 0, "results": []}
+        
+    try:
+        results = _search_documents(user_id, q)
+        return {
+            "success": True, 
+            "count": len(results), 
+            "results": results
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
