@@ -19,7 +19,7 @@ const SignupForm = () => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             localStorage.setItem('user_id', userCredential.user.uid);
-            navigate('/login');
+            navigate('/dashboard');
         } catch (err) {
             console.error(err.code, err.message);
             switch (err.code) {
