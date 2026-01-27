@@ -10,8 +10,10 @@ const RequireAuth = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
+                localStorage.setItem('user_id', user.uid);
                 setIsAuthenticated(true);
             } else {
+                localStorage.removeItem('user_id');
                 setIsAuthenticated(false);
             }
         });

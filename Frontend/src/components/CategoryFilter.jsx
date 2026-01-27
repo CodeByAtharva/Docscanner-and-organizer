@@ -6,7 +6,9 @@ const CategoryFilter = ({ category, setCategory }) => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const userId = localStorage.getItem('user_id') || 'test_user_id';
+                const userId = localStorage.getItem('user_id');
+                if (!userId) return;
+
                 const response = await fetch(`http://localhost:8000/api/documents/categories?user_id=${userId}`);
                 if (response.ok) {
                     const data = await response.json();

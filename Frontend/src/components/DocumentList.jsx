@@ -9,7 +9,14 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
     const fetchDocuments = async (isBackground = false) => {
         try {
             if (!isBackground) setLoading(true);
-            const userId = localStorage.getItem('user_id') || 'test_user_id';
+            const userId = localStorage.getItem('user_id');
+
+            if (!userId) {
+                // Should ideally be handled by RequireAuth, but safety check
+                setDocuments([]);
+                setLoading(false);
+                return;
+            }
 
             let url = `http://localhost:8000/api/documents?user_id=${userId}`;
 

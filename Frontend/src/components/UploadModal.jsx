@@ -65,11 +65,14 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
 
         const formData = new FormData();
         formData.append('file', file);
-        // TODO: proper user ID from auth context. Using placeholder for now/demo.
-        // In a real app, backend might extract user from token or we pass it here if needed.
-        // Based on reqs: "Include the authenticated user's identifier".
-        // I will use a dummy user_id or localStorage user if available, fallback to "test_user".
-        const userId = localStorage.getItem('user_id') || 'test_user_id';
+        formData.append('file', file);
+
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+            setError("User not authenticated");
+            setUploading(false);
+            return;
+        }
         formData.append('user_id', userId);
 
         try {

@@ -126,4 +126,4 @@ npm run dev
 ```
 
 ---
-**Developed for Progression School Agentic AI Internship**
+

@@ -19,7 +19,8 @@ const LoginForm = () => {
         setLoading(true);
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            localStorage.setItem('user_id', userCredential.user.uid);
             setSuccess('Login successful! Redirecting to dashboard...');
             setTimeout(() => {
                 navigate('/dashboard');
