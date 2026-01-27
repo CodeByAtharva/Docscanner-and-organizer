@@ -12,8 +12,14 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
             const userId = localStorage.getItem('user_id') || 'test_user_id';
 
             let url = `http://localhost:8000/api/documents?user_id=${userId}`;
+
+            // If searching, search API takes precedence (global search)
             if (searchQuery) {
                 url = `http://localhost:8000/api/search?q=${encodeURIComponent(searchQuery)}&user_id=${userId}`;
+            }
+            // If not searching but filtering by category
+            else if (selectedCategory && selectedCategory !== 'All Categories') {
+                url = `http://localhost:8000/api/documents?user_id=${userId}&category=${encodeURIComponent(selectedCategory)}`;
             }
 
             const response = await fetch(url);
@@ -32,8 +38,10 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
                     preview: result.snippet // Use snippet for preview
                 }));
                 setDocuments(searchResults);
+                if (onDocumentsLoaded) onDocumentsLoaded(searchResults.length);
             } else {
                 setDocuments(data.documents);
+                if (onDocumentsLoaded) onDocumentsLoaded(data.count || data.documents.length);
             }
 
             setError(null);
@@ -51,7 +59,7 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
         }, 300);
 
         return () => clearTimeout(timerId);
-    }, [searchQuery, refreshTrigger]);
+    }, [searchQuery, selectedCategory, refreshTrigger]); // Added selectedCategory to dependencies
 
     // Polling logic: Check every 5 seconds if any document is processing, ONLY if not searching
     useEffect(() => {
@@ -72,12 +80,8 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
         };
     }, [documents, searchQuery]);
 
-    // Filter documents based on category (Search is handled by API now)
-    const filteredDocuments = documents.filter((doc) => {
-        // const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()); // Handled by API
-        const matchesCategory = selectedCategory === 'All Categories' || doc.category === selectedCategory;
-        return matchesCategory;
-    });
+    // No client-side filtering needed anymore
+    const filteredDocuments = documents;
 
     if (loading) {
         return (

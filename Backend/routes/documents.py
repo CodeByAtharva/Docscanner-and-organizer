@@ -82,20 +82,28 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/documents")
-async def get_documents(user_id: str):
+async def get_documents(user_id: str, category: str = None):
     """
-    Retrieve all documents for a specific user.
+    Retrieve all documents for a specific user, optionally filtered by category.
     """
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute('''
-            SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status, category 
-            FROM documents 
-            WHERE user_id = ? 
-            ORDER BY upload_date DESC
-        ''', (user_id,))
+        if category and category != "All Categories":
+            cursor.execute('''
+                SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status, category 
+                FROM documents 
+                WHERE user_id = ? AND category = ?
+                ORDER BY upload_date DESC
+            ''', (user_id, category))
+        else:
+            cursor.execute('''
+                SELECT id, title, upload_date, content_type, file_path, extracted_text, processing_status, category 
+                FROM documents 
+                WHERE user_id = ? 
+                ORDER BY upload_date DESC
+            ''', (user_id,))
         
         documents = []
         rows = cursor.fetchall()

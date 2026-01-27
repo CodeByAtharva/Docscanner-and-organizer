@@ -6,16 +6,23 @@ import UploadButton from '../components/UploadButton';
 import SearchBar from '../components/SearchBar';
 import CategoryFilter from '../components/CategoryFilter';
 import UploadModal from '../components/UploadModal';
+import CategoryHeader from '../components/CategoryHeader';
 
 const Dashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Categories');
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [filteredCount, setFilteredCount] = useState(0);
 
     const handleUploadSuccess = () => {
         setRefreshTrigger(prev => prev + 1);
         console.log("Upload successful, refreshing list...");
+    };
+
+    const handleClearFilter = () => {
+        setSelectedCategory('All Categories');
+        setSearchQuery('');
     };
 
     return (
@@ -42,8 +49,20 @@ const Dashboard = () => {
                     </div>
                 </div>
 
+                {/* Category Header (Conditional) */}
+                <CategoryHeader
+                    category={selectedCategory}
+                    count={filteredCount}
+                    onClear={handleClearFilter}
+                />
+
                 {/* Content Section */}
-                <DocumentList searchQuery={searchQuery} selectedCategory={selectedCategory} refreshTrigger={refreshTrigger} />
+                <DocumentList
+                    searchQuery={searchQuery}
+                    selectedCategory={selectedCategory}
+                    refreshTrigger={refreshTrigger}
+                    onDocumentsLoaded={setFilteredCount}
+                />
             </main>
 
             <UploadModal
