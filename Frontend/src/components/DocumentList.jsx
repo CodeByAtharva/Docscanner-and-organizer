@@ -11,7 +11,7 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories' })
             setLoading(true);
             // Using a dummy user_id or one from context if available in future
             const userId = localStorage.getItem('user_id') || 'test_user_id';
-            const response = await fetch(`http://localhost:8001/api/documents?user_id=${userId}`);
+            const response = await fetch(`http://localhost:8000/api/documents?user_id=${userId}`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');

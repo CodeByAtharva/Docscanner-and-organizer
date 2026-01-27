@@ -20,7 +20,7 @@ const DocumentDetail = () => {
             try {
                 setLoading(true);
                 const userId = localStorage.getItem('user_id') || 'test_user_id';
-                const response = await fetch(`http://localhost:8001/api/documents/${id}?user_id=${userId}`);
+                const response = await fetch(`http://localhost:8000/api/documents/${id}?user_id=${userId}`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch document details');
@@ -39,6 +39,27 @@ const DocumentDetail = () => {
             fetchDocument();
         }
     }, [id]);
+
+    const handleDelete = async () => {
+        if (window.confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
+            try {
+                const userId = localStorage.getItem('user_id') || 'test_user_id';
+                const response = await fetch(`http://localhost:8000/api/documents/${id}?user_id=${userId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    navigate('/dashboard');
+                } else {
+                    const data = await response.json();
+                    alert(`Failed to delete: ${data.detail || 'Unknown error'}`);
+                }
+            } catch (err) {
+                console.error("Error deleting document:", err);
+                alert("An error occurred while deleting the document.");
+            }
+        }
+    };
 
     if (loading) {
         return (
@@ -62,12 +83,12 @@ const DocumentDetail = () => {
         );
     }
 
-    const fileUrl = `http://localhost:8001/api/documents/file/${document.id}?user_id=${localStorage.getItem('user_id') || 'test_user_id'}`;
+    const fileUrl = `http://localhost:8000/api/documents/file/${document.id}?user_id=${localStorage.getItem('user_id') || 'test_user_id'}`;
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
             <Navbar />
-            <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 pt-24">
                 {/* Header */}
                 <div className="md:flex md:items-center md:justify-between mb-8">
                     <div className="flex-1 min-w-0">
@@ -95,6 +116,12 @@ const DocumentDetail = () => {
                         <div className="ml-3">
                             <CategorySelector currentCategory={document.category} />
                         </div>
+                        <button
+                            onClick={handleDelete}
+                            className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                            Delete
+                        </button>
                     </div>
                 </div>
 

@@ -208,3 +208,63 @@ async def get_document_file(document_id: int, user_id: str):
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+def _delete_document_helper(document_id: int, user_id: str):
+    """
+    Helper function to delete a document record and its associated file.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # 1. Get file path before deleting record
+        cursor.execute('SELECT file_path FROM documents WHERE id = ? AND user_id = ?', (document_id, user_id))
+        row = cursor.fetchone()
+        
+        if not row:
+            return False, "Document not found"
+            
+        file_path = row['file_path']
+        
+        # 2. Delete record from database
+        cursor.execute('DELETE FROM documents WHERE id = ? AND user_id = ?', (document_id, user_id))
+        conn.commit()
+        
+        # 3. Delete file from filesystem
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                # Log error but don't fail the request since DB record is gone
+                print(f"Error deleting file {file_path}: {e}")
+                
+        return True, "Document deleted successfully"
+        
+    except Exception as e:
+        return False, str(e)
+    finally:
+        conn.close()
+
+@router.delete("/api/documents/{document_id}")
+async def delete_document(document_id: int, user_id: str):
+    """
+    Delete a document and its associated file.
+    """
+    try:
+        success, message = _delete_document_helper(document_id, user_id)
+        
+        if not success:
+            if message == "Document not found":
+                raise HTTPException(status_code=404, detail="Document not found")
+            else:
+                raise HTTPException(status_code=500, detail=message)
+                
+        return {
+            "success": True,
+            "message": "Document deleted successfully"
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
