@@ -48,55 +48,79 @@ async def process_document(document_id: int, file_path: str):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
+        # 1. Prepare and Process Content
         file_ext = os.path.splitext(file_path)[1].lower()
-        image_contents = []
-
-        # 1. Prepare Image Content
+        extracted_text_parts = []
+        
         if file_ext == '.pdf':
             doc = fitz.open(file_path)
             # Process up to first 2 pages
             num_pages = min(2, len(doc))
+            print(f"Processing {num_pages} pages from PDF...")
+            
             for i in range(num_pages):
+                print(f"Processing page {i+1}/{num_pages}...")
                 page = doc.load_page(i)
                 pix = page.get_pixmap()
                 img_data = pix.tobytes("png")
                 b64_data = base64.b64encode(img_data).decode("utf-8")
-                image_contents.append(
-                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64_data}"}}
+                
+                # Create message for this specific page
+                image_content = {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64_data}"}}
+                
+                extraction_prompt = f"Extract all the text content from this page (Page {i+1}). Output only the extracted text, preserving the structure as much as possible."
+                
+                message = HumanMessage(
+                    content=[
+                        {"type": "text", "text": extraction_prompt},
+                        image_content
+                    ]
                 )
+                
+                # Call LLM for this page
+                response = await invoke_with_retry(llm, [message])
+                page_text = response.content
+                if not isinstance(page_text, str):
+                    page_text = str(page_text)
+                    
+                extracted_text_parts.append(f"--- Page {i+1} ---\n{page_text}")
+                
             doc.close()
+            
         elif file_ext in ['.jpg', '.jpeg', '.png']:
+            print("Processing image file...")
             with open(file_path, "rb") as image_file:
                 img_data = image_file.read()
                 b64_data = base64.b64encode(img_data).decode("utf-8")
                 mime_types = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png'}
                 mime_type = mime_types.get(file_ext, 'image/jpeg')
-                image_contents.append(
-                    {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{b64_data}"}}
+                
+                image_content = {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{b64_data}"}}
+                
+                extraction_prompt = "Extract all the text content from this image. Output only the extracted text, preserving the structure as much as possible."
+                
+                message = HumanMessage(
+                    content=[
+                        {"type": "text", "text": extraction_prompt},
+                        image_content
+                    ]
                 )
+                
+                response = await invoke_with_retry(llm, [message])
+                text = response.content
+                if not isinstance(text, str):
+                    text = str(text)
+                extracted_text_parts.append(text)
+                
         else:
              raise ValueError(f"Unsupported file type: {file_ext}")
 
-        if not image_contents:
+        if not extracted_text_parts:
             raise ValueError("No content could be extracted from the file.")
 
-        # 2a. Call LLM for Text Extraction
-        extraction_prompt = "Extract all the text content from this document. If it is a multi-page document, I have provided the first few pages. Output only the extracted text, preserving the structure as much as possible."
-        
-        message = HumanMessage(
-            content=[
-                {"type": "text", "text": extraction_prompt},
-                *image_contents
-            ]
-        )
-        
-        response = await invoke_with_retry(llm, [message])
-        extracted_text = response.content
-        if not isinstance(extracted_text, str):
-            print(f"Warning: extracted_text is not a string, type: {type(extracted_text)}")
-            extracted_text = str(extracted_text)
-
-        print(f"Extracted text type: {type(extracted_text)}")
+        # Combine extracted text
+        extracted_text = "\n\n".join(extracted_text_parts)
+        print(f"Extracted text length: {len(extracted_text)}")
         
         # 2b. Call LLM for Categorization
         print("Starting categorization...")
