@@ -114,7 +114,11 @@ const DocumentDetail = () => {
                             Back
                         </button>
                         <div className="ml-3">
-                            <CategorySelector currentCategory={document.category} />
+                            <CategorySelector
+                                documentId={document.id}
+                                currentCategory={document.category}
+                                onCategoryUpdate={(newCategory) => setDocument({ ...document, category: newCategory })}
+                            />
                         </div>
                         <button
                             onClick={handleDelete}

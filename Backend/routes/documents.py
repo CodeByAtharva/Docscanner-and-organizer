@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 from database import get_db_connection
 from services.llm_service import process_document
+import pydantic
 
 router = APIRouter()
 
@@ -132,6 +133,20 @@ async def get_documents(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/api/documents/categories")
+async def get_categories(user_id: str):
+    """
+    Retrieve all categories with document counts.
+    """
+    try:
+        categories = _get_categories_with_counts(user_id)
+        return {
+            "success": True,
+            "categories": categories
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/api/documents/{document_id}")
 async def get_document_details(document_id: int, user_id: str):
     """
@@ -208,6 +223,112 @@ async def get_document_file(document_id: int, user_id: str):
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Helper Functions for Category Management
+def _get_categories_with_counts(user_id: str):
+    """
+    Helper function to get all categories and their document counts for a user.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Group by category and count documents
+        cursor.execute('''
+            SELECT category, COUNT(*) as count
+            FROM documents 
+            WHERE user_id = ?
+            GROUP BY category
+        ''', (user_id,))
+        
+        rows = cursor.fetchall()
+        categories = []
+        
+        # Define standard categories to ensure they always appear even if count is 0
+        standard_categories = ["Invoice", "Receipt", "Contract", "Note", "Letter", "Form", "Other", "Uncategorized"]
+        category_counts = {cat: 0 for cat in standard_categories}
+        
+        # Update with actual counts
+        for row in rows:
+            cat_name = row['category'] if row['category'] else "Uncategorized"
+            # Normalize case just in case
+            found = False
+            for std_cat in standard_categories:
+                if std_cat.lower() == cat_name.lower():
+                    category_counts[std_cat] += row['count']
+                    found = True
+                    break
+            if not found:
+                # Add non-standard categories if any
+                category_counts[cat_name] = row['count']
+        
+        # Convert to list
+        result = [{"name": cat, "count": count} for cat, count in category_counts.items()]
+        # Sort by name
+        result.sort(key=lambda x: x['name'])
+        
+        return result
+        
+    except Exception as e:
+        print(f"Error fetching categories: {e}")
+        return []
+    finally:
+        conn.close()
+
+def _update_document_category(document_id: int, user_id: str, new_category: str):
+    """
+    Helper function to update a document's category.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Check ownership
+        cursor.execute('SELECT id FROM documents WHERE id = ? AND user_id = ?', (document_id, user_id))
+        if not cursor.fetchone():
+            return False, "Document not found or access denied"
+
+        # Update category
+        cursor.execute('UPDATE documents SET category = ? WHERE id = ?', (new_category, document_id))
+        conn.commit()
+        return True, "Category updated successfully"
+        
+    except Exception as e:
+        return False, str(e)
+    finally:
+        conn.close()
+
+
+
+class CategoryUpdate(pydantic.BaseModel):
+    category: str
+
+@router.patch("/api/documents/{document_id}/category")
+async def update_category(document_id: int, category_update: CategoryUpdate, user_id: str):
+    """
+    Update the category of a document.
+    """
+    try:
+        success, message = _update_document_category(document_id, user_id, category_update.category)
+        
+        if not success:
+            if "not found" in message:
+                raise HTTPException(status_code=404, detail=message)
+            else:
+                raise HTTPException(status_code=500, detail=message)
+                
+        return {
+            "success": True,
+            "message": message,
+            "category": category_update.category
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 def _delete_document_helper(document_id: int, user_id: str):
     """
