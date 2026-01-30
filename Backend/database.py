@@ -35,6 +35,7 @@ def init_db():
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(documents)")
         columns = [info[1] for info in cursor.fetchall()]
+        print(columns)
         
         if 'extracted_text' not in columns:
             print("Migrating database: adding extracted_text column")

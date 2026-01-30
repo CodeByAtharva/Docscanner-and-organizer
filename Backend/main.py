@@ -54,7 +54,6 @@ async def lifespan(app: FastAPI):
     if not os.path.exists("uploads"):
         os.makedirs("uploads")
     yield
-    # Shutdown: Clean up resources if needed (none for now)
 
 app = FastAPI(title="Backend API", version="0.1.0", lifespan=lifespan)
 
