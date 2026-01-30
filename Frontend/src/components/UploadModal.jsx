@@ -75,8 +75,10 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
         }
         formData.append('user_id', userId);
 
+        const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "https://docscanner-and-organizer.onrender.com";
+
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents`, {
+            const response = await fetch(`${API_BASE_URL}/api/documents`, {
                 method: 'POST',
                 body: formData,
             });

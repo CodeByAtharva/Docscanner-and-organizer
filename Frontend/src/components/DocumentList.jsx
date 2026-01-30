@@ -6,6 +6,8 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "https://docscanner-and-organizer.onrender.com";
+
     const fetchDocuments = async (isBackground = false) => {
         try {
             if (!isBackground) setLoading(true);
@@ -18,15 +20,15 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
                 return;
             }
 
-            let url = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents?user_id=${userId}`;
+            let url = `${API_BASE_URL}/api/documents?user_id=${userId}`;
 
             // If searching, search API takes precedence (global search)
             if (searchQuery) {
-                url = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/search?q=${encodeURIComponent(searchQuery)}&user_id=${userId}`;
+                url = `${API_BASE_URL}/api/search?q=${encodeURIComponent(searchQuery)}&user_id=${userId}`;
             }
             // If not searching but filtering by category
             else if (selectedCategory && selectedCategory !== 'All Categories') {
-                url = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents?user_id=${userId}&category=${encodeURIComponent(selectedCategory)}`;
+                url = `${API_BASE_URL}/api/documents?user_id=${userId}&category=${encodeURIComponent(selectedCategory)}`;
             }
 
             const response = await fetch(url);

@@ -9,7 +9,8 @@ const CategoryFilter = ({ category, setCategory }) => {
                 const userId = localStorage.getItem('user_id');
                 if (!userId) return;
 
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents/categories?user_id=${userId}`);
+                const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "https://docscanner-and-organizer.onrender.com";
+                const response = await fetch(`${API_BASE_URL}/api/documents/categories?user_id=${userId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setCategories(data.categories);

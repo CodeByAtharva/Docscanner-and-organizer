@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-const API_URL = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/random-quote`;
+const API_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "https://docscanner-and-organizer.onrender.com";
+const API_URL = `${API_BASE_URL}/api/random-quote`;
 
 function QuoteGenerator() {
   const [quote, setQuote] = useState("");
