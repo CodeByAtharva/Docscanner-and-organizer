@@ -76,7 +76,7 @@ const UploadModal = ({ isOpen, onClose, onUploadSuccess }) => {
         formData.append('user_id', userId);
 
         try {
-            const response = await fetch('http://localhost:8000/api/documents', {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents`, {
                 method: 'POST',
                 body: formData,
             });

@@ -9,7 +9,7 @@ const CategorySelector = ({ documentId, currentCategory, onCategoryUpdate }) => 
         const fetchCategories = async () => {
             try {
                 const userId = localStorage.getItem('user_id') || 'test_user_id';
-                const response = await fetch(`http://localhost:8000/api/documents/categories?user_id=${userId}`);
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents/categories?user_id=${userId}`);
                 if (response.ok) {
                     const data = await response.json();
                     // Extract just names for the selector
@@ -33,7 +33,7 @@ const CategorySelector = ({ documentId, currentCategory, onCategoryUpdate }) => 
 
         try {
             const userId = localStorage.getItem('user_id') || 'test_user_id';
-            const response = await fetch(`http://localhost:8000/api/documents/${documentId}/category?user_id=${userId}`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents/${documentId}/category?user_id=${userId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

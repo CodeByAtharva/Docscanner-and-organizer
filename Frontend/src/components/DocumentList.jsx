@@ -18,15 +18,15 @@ const DocumentList = ({ searchQuery = '', selectedCategory = 'All Categories', r
                 return;
             }
 
-            let url = `http://localhost:8000/api/documents?user_id=${userId}`;
+            let url = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents?user_id=${userId}`;
 
             // If searching, search API takes precedence (global search)
             if (searchQuery) {
-                url = `http://localhost:8000/api/search?q=${encodeURIComponent(searchQuery)}&user_id=${userId}`;
+                url = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/search?q=${encodeURIComponent(searchQuery)}&user_id=${userId}`;
             }
             // If not searching but filtering by category
             else if (selectedCategory && selectedCategory !== 'All Categories') {
-                url = `http://localhost:8000/api/documents?user_id=${userId}&category=${encodeURIComponent(selectedCategory)}`;
+                url = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents?user_id=${userId}&category=${encodeURIComponent(selectedCategory)}`;
             }
 
             const response = await fetch(url);

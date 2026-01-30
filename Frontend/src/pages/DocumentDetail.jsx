@@ -20,7 +20,7 @@ const DocumentDetail = () => {
             try {
                 setLoading(true);
                 const userId = localStorage.getItem('user_id') || 'test_user_id';
-                const response = await fetch(`http://localhost:8000/api/documents/${id}?user_id=${userId}`);
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents/${id}?user_id=${userId}`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch document details');
@@ -44,7 +44,7 @@ const DocumentDetail = () => {
         if (window.confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
             try {
                 const userId = localStorage.getItem('user_id') || 'test_user_id';
-                const response = await fetch(`http://localhost:8000/api/documents/${id}?user_id=${userId}`, {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents/${id}?user_id=${userId}`, {
                     method: 'DELETE',
                 });
 
@@ -83,7 +83,7 @@ const DocumentDetail = () => {
         );
     }
 
-    const fileUrl = `http://localhost:8000/api/documents/file/${document.id}?user_id=${localStorage.getItem('user_id') || 'test_user_id'}`;
+    const fileUrl = `${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents/file/${document.id}?user_id=${localStorage.getItem('user_id') || 'test_user_id'}`;
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">

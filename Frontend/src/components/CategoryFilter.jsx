@@ -9,7 +9,7 @@ const CategoryFilter = ({ category, setCategory }) => {
                 const userId = localStorage.getItem('user_id');
                 if (!userId) return;
 
-                const response = await fetch(`http://localhost:8000/api/documents/categories?user_id=${userId}`);
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_BASE_URL}/api/documents/categories?user_id=${userId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setCategories(data.categories);
