@@ -61,7 +61,7 @@ app = FastAPI(title="Backend API", version="0.1.0", lifespan=lifespan)
 # ... existing cors middleware ...
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vite default port and common React port
+    allow_origins=["http://localhost:5173", "http://localhost:3000","https://docscanner-and-organizer.onrender.com"],  # Vite default port and common React port
     allow_credentials=True,
     allow_methods=["*"],  # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allows all headers
